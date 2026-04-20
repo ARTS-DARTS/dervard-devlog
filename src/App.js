@@ -1,12 +1,10 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import StatsWidget from './components/StatsWidget';
 
 const JSONBIN_BIN_ID = "69d6d01636566621a8914c8f";
 const JSONBIN_API_KEY = "$2a$10$11sgWrptIfwQlehYtSaNEuGQKpkG6HT2OBoyIYHeJT51yPaXi1xxW";
-
 const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
-// Защита от накрутки: проверяем по localStorage
 async function incrementVisit() {
   const hasVisited = localStorage.getItem('has_visited');
   if (hasVisited) return false;
@@ -107,7 +105,6 @@ export default function DervardDevlog() {
     <div style={{ minHeight: "100vh", background: bg, color: tp, fontFamily: "'Chakra Petch', sans-serif", padding: "40px 20px" }}>
       <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
       
-      {/* Статистика и счётчик в правом верхнем углу */}
       <div style={{
         position: "fixed",
         top: 16,
