@@ -13,7 +13,6 @@ const StatsWidget = () => {
     error: null
   });
 
-  // Получаем или создаём ID посетителя
   const getVisitorId = () => {
     let visitorId = localStorage.getItem('visitor_id');
     if (!visitorId) {
@@ -23,7 +22,6 @@ const StatsWidget = () => {
     return visitorId;
   };
 
-  // Получаем или создаём ID сессии (для онлайна)
   const getSessionId = () => {
     let sessionId = sessionStorage.getItem('session_id');
     if (!sessionId) {
@@ -33,7 +31,6 @@ const StatsWidget = () => {
     return sessionId;
   };
 
-  // Загрузка статистики из JSONBin
   const fetchStats = async () => {
     try {
       const response = await fetch(`${JSONBIN_URL}/latest`, {
@@ -58,28 +55,24 @@ const StatsWidget = () => {
     }
   };
 
-  // Обновление статистики
   const updateStats = async () => {
     const visitorId = getVisitorId();
     const sessionId = getSessionId();
     const today = new Date().toISOString().split('T')[0];
     
     try {
-      // Получаем текущие данные
       const response = await fetch(`${JSONBIN_URL}/latest`, {
         headers: { "X-Master-Key": JSONBIN_API_KEY }
       });
       const data = await response.json();
       const record = data.record;
       
-      // Инициализируем stats если нет
       if (!record.stats) {
         record.stats = { todayVisits: 0, onlineNow: 0, activeSessions: {}, dailyVisitors: {} };
       }
       if (!record.stats.activeSessions) record.stats.activeSessions = {};
       if (!record.stats.dailyVisitors) record.stats.dailyVisitors = {};
       
-      // Очищаем старые сессии (старше 30 секунд)
       const now = Date.now();
       let activeCount = 0;
       for (const [sid, lastSeen] of Object.entries(record.stats.activeSessions)) {
@@ -90,7 +83,6 @@ const StatsWidget = () => {
         }
       }
       
-      // Добавляем текущую сессию
       if (!record.stats.activeSessions[sessionId]) {
         record.stats.activeSessions[sessionId] = now;
         activeCount++;
@@ -98,7 +90,6 @@ const StatsWidget = () => {
         record.stats.activeSessions[sessionId] = now;
       }
       
-      // Обновляем дневных посетителей
       if (!record.stats.dailyVisitors[today]) {
         record.stats.dailyVisitors[today] = {};
       }
@@ -106,14 +97,11 @@ const StatsWidget = () => {
         record.stats.dailyVisitors[today][visitorId] = true;
       }
       
-      // Считаем уникальных посетителей за сегодня
       const todayVisitsCount = Object.keys(record.stats.dailyVisitors[today] || {}).length;
       
-      // Обновляем статистику
       record.stats.onlineNow = activeCount;
       record.stats.todayVisits = todayVisitsCount;
       
-      // Сохраняем обратно в JSONBin
       await fetch(JSONBIN_URL, {
         method: "PUT",
         headers: {
@@ -123,29 +111,21 @@ const StatsWidget = () => {
         body: JSON.stringify(record)
       });
       
-      // Обновляем состояние
       setStats({
         todayVisits: todayVisitsCount,
         onlineNow: activeCount,
         loading: false,
         error: null
       });
-      
     } catch (error) {
       console.error('Update stats error:', error);
     }
   };
 
   useEffect(() => {
-    // Загружаем статистику сразу
     fetchStats();
-    
-    // Обновляем статистику (heartbeat)
     updateStats();
-    
-    // Heartbeat каждые 15 секунд
     const interval = setInterval(updateStats, 15000);
-    
     return () => clearInterval(interval);
   }, []);
 
