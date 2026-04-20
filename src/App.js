@@ -6,21 +6,18 @@ const JSONBIN_API_KEY = "$2a$10$11sgWrptIfwQlehYtSaNEuGQKpkG6HT2OBoyIYHeJT51yPaX
 
 const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
-// Защита от накрутки: проверяем по localStorage и IP (через API)
+// Защита от накрутки: проверяем по localStorage
 async function incrementVisit() {
-  // Проверяем, был ли уже визит в этой сессии
   const hasVisited = localStorage.getItem('has_visited');
   if (hasVisited) return false;
   
   try {
-    // Получаем текущие данные
     const r = await fetch(`${JSONBIN_URL}/latest`, { 
       headers: { "X-Master-Key": JSONBIN_API_KEY } 
     });
     const j = await r.json();
     const currentVisits = j.record.visits || 0;
     
-    // Обновляем счётчик
     await fetch(JSONBIN_URL, {
       method: "PUT",
       headers: { 
@@ -30,7 +27,6 @@ async function incrementVisit() {
       body: JSON.stringify({ ...j.record, visits: currentVisits + 1 })
     });
     
-    // Отмечаем, что визит засчитан
     localStorage.setItem('has_visited', 'true');
     return true;
   } catch (e) {
@@ -62,7 +58,6 @@ export default function DervardDevlog() {
   const [visits, setVisits] = useState(0);
 
   useEffect(() => {
-    // Загружаем данные
     loadFromBin().then(d => { 
       if (d) {
         setData(d);
@@ -71,17 +66,14 @@ export default function DervardDevlog() {
       setLoading(false); 
     });
     
-    // Обновляем счётчик (только если сайт загрузился в браузере, не при F5)
     incrementVisit().then(updated => {
       if (updated) {
-        // Обновляем отображение счётчика
         loadFromBin().then(d => {
           if (d) setVisits(d.visits || 0);
         });
       }
     });
     
-    // Обновляем данные каждые 30 секунд (без обновления счётчика)
     const iv = setInterval(async () => { 
       const fresh = await loadFromBin(); 
       if (fresh) {
@@ -125,10 +117,8 @@ export default function DervardDevlog() {
         alignItems: "center",
         gap: 10,
       }}>
-        {/* Компактный виджет статистики */}
         <StatsWidget />
         
-        {/* Счётчик просмотров */}
         <div style={{
           background: sf,
           border: `1px solid ${bd}`,
